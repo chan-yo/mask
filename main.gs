@@ -2,6 +2,36 @@ var time;
 
 function setUp(){
   var spreadsheet = SpreadsheetApp.create("mask");
+  var sheet = spreadsheet.getActiveSheet()
+  var output = [
+    [
+      '対象',
+      'サイトURL',
+      '観測値ID',
+      'データURL',
+      'charset'
+    ],[
+      'PM2.5',
+      'http://soramame.taiki.go.jp/',
+      '',
+      '="http://soramame.taiki.go.jp/DataListHyou.php?MstCode="&C2&"&Time=:time"',
+      'EUC-JP'
+    ],[
+      '花粉',
+      'http://kafun.taiki.go.jp/',
+      '',
+      '',
+      ''
+    ]
+  ];
+  sheet.getRange
+  var range = sheet.getRange(1,1,3,5);
+  for(var row = 1; row <= range.getNumRows(); row++) {
+    for(var collumn = 1; collumn <= range.getNumColumns(); collumn++) {
+      range.getCell(row, collumn).setValue(output[row-1][collumn-1]);
+      Logger.log(1);
+    }
+  }
 }
 
 function main() {
