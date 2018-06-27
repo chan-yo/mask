@@ -55,41 +55,8 @@ function main() {
         handleError('最新の情報が取得できませんでした。サイトの更新が止まっているか、サイトのhtml構成が変化している可能性があります。',
                     'サイトから取得できた最新の日時： ' + parsedTime);
       }
-      var so2 = parsedHtml[4];
-      var no = parsedHtml[5];
-      var no2 = parsedHtml[6];
-      var nox = parsedHtml[7];
-      var nmhc = parsedHtml[8];
-      var ch4 = parsedHtml[9];
-      var thc = parsedHtml[10];
-      var spm = parsedHtml[11];
-      var pm2_5 = parsedHtml[12];
-      var wd_ws = parsedHtml[13];
-      var temperature = parsedHtml[14];
 
-      /*
-          http://soramame.taiki.go.jp/KomokuDetail.html
-          □大気汚染物質
-          略称  物質名              単位  解説
-          SO2   二酸化硫黄          ppm   石油、石炭等を燃焼したときに含有される硫黄（Ｓ）が酸化されて発生するもので、高濃度で呼吸器に影響を及ぼすほか、森林や湖沼などに影響を与える酸性雨の原因物質になると言われている。
-          NO    一酸化窒素          ppm   窒素酸化物は、ものの燃焼や化学反応によって生じる窒素と酸素の化合物で、主として一酸化窒素（ＮＯ）と二酸化窒素（ＮＯ２）の形で大気中に存在する。発生源は、工場・事業場、自動車、家庭等多種多様である。発生源からは、大部分が一酸化窒素として排出されるが、大気中で酸化されて二酸化窒素になる。二酸化窒素は、高濃度で呼吸器に影響を及ぼすほか、酸性雨及び光化学オキシダントの原因物質になると言われている。
-          NO2   二酸化窒素          ppm   同上
-          NOX   窒素酸化物          ppm   同上
-          CO    一酸化炭素          ppm   炭素化合物の不完全燃焼等により発生し、血液中のヘモグロビンと結合して、酸素を運搬する機能を阻害するなどの影響を及ぼすほか、温室効果ガスである大気中のメタンの寿命を長くすることが知られている。
-          OX    光化学オキシダント   ppm   大気中の窒素酸化物や炭化水素が太陽の紫外線を受けて化学反応を起こし発生する汚染物質で、光化学スモッグの原因となり、高濃度では、粘膜を刺激し、呼吸器への影響を及ぼすほか、農作物など植物への影響も観察されている。
-          NMHC  非メタン炭化水素     ppmC  炭化水素は、炭素と水素が結合した有機物の総称である。大気中の炭化水素濃度の評価には、光化学反応に関与する非メタン炭化水素が用いられる。
-          CH4   メタン              ppmC  同上
-          THC   全炭化水素          ppmC  同上
-          SPM   浮遊粒子状物質 mg/m3 浮遊粉じんのうち、１０μｍ以下の粒子状物質のことをいい、ボイラーや自動車の排出ガス等から発生するもので、大気中に長時間滞留し、高濃度で肺や気管などに沈着して呼吸器に影響を及ぼす。
-          PM2.5 微小粒子状物質 μg/m3 大気中に浮遊する粒子状物質であって、その粒径が2.5μmの粒子を50%の割合で分離できる分粒装置を用いて、より粒径の大きい粒子を除去した後に採取される粒子をいう。
-          SP    浮遊粉じん mg/m3 　 ○ 大気中に長時間浮遊しているばいじん、粉じん等をいう。ばいじんとは、ものの燃焼によって生じたすす等の固体粒子を総称したものをいう。
-          □気象項目
-          略称  物質名       単位    解説
-          WD    風向        16方位  風の吹いてくる方向。１６の向きで示す。たとえば、風向が北であれば、北から南に風が吹いている状態をいう。
-          WS    風速        m/s     1秒間に大気が移動した距離。たとえば、平均風速10m/sは、おおむね、強風注意報が発令されるレベルの風速をいう。
-          TEMP  気温        ℃ 　   大気の温度。
-          HUM   相対湿度     % 　    空気中の水蒸気量が飽和状態（含みうる水蒸気量が限界になった時）に比べ、どの程度含まれているかを％で表したもの。
-      */
+      Logger.log(formatOutout(parsedHtml));
     } else {
       handleError('クローリングが正常に行われませんでした。', response.code + " : " + response.body);
     }
@@ -153,4 +120,50 @@ function parseTableHtml(html, root) {
  */
 function handleError(title, body){
   mainSheet.getRange('B10').setValue(title + String.fromCharCode(10) + body);
+}
+
+/**
+ * 出力用に整形する
+ */
+function formatOutout(html){
+  // 各物質の説明はこちらを参照 http://soramame.taiki.go.jp/KomokuDetail.html
+  var obj = {
+    'year' : html[0],
+    'month' : html[1],
+    'day' : html[2],
+    'hour' : html[3],
+    'so2' : html[4],
+    'no' : html[5],
+    'no2' : html[6],
+    'nox' : html[7],
+    'co' : html[8],
+    'ox' : html[9],
+    'nmhc' : html[10],
+    'ch4' : html[11],
+    'thc' : html[12],
+    'spm' : html[13],
+    'pm2_5' : html[14],
+    'sp' : html[15],
+    'wd' : html[16],
+    'ws' : html[17],
+    'temperature' : html[18],
+    'hum' : html[19]
+  };
+  return obj.year + "年" + obj.month + "月" + obj.day + "日" + obj.hour + "時の情報です。" + String.fromCharCode(10)
+    + "  SO2:二酸化硫黄 " + obj.so2 + "(ppm)" + String.fromCharCode(10)
+    + "  NO:一酸化窒素 " + obj.no + "(ppm)" + String.fromCharCode(10)
+    + "  NO2:二酸化窒素 " + obj.no2 + "(ppm)" + String.fromCharCode(10)
+    + "  NOX:窒素酸化物 " + obj.nox + "(ppm)" + String.fromCharCode(10)
+    + "  CO:一酸化炭素 " + obj.co + "(ppm)" + String.fromCharCode(10)
+    + "  OX:光化学オキシダント " + obj.ox + "(ppm)" + String.fromCharCode(10)
+    + "  NMHC:非メタン炭化水素 " + obj.nmhc + "(ppmC)" + String.fromCharCode(10)
+    + "  CH4:メタン " + obj.ch4 + "(ppmC)" + String.fromCharCode(10)
+    + "  THC:全炭化水素 " + obj.thc + "(ppmC)" + String.fromCharCode(10)
+    + "  SPM:浮遊粒子状物質 " + obj.spm + "(mg/m3)" + String.fromCharCode(10)
+    + "  PM2.5:微小粒子状物質 " + obj.pm2_5 + "(μg/m3)" + String.fromCharCode(10)
+    + "  SP:浮遊粉じん " + obj.sp + "(mg/m3)" + String.fromCharCode(10)
+    + "  WD:風向 " + obj.wd + "(16方位)" + String.fromCharCode(10)
+    + "  WS:風速 " + obj.ws + "(m/s)" + String.fromCharCode(10)
+    + "  TEMP:気温 " + obj.temperature + "(℃)" + String.fromCharCode(10)
+    + "  HUM:相対湿度 " + obj.hum + "(%)";
 }
