@@ -1,4 +1,8 @@
+// TODO: 閾値の決定
+// TODO: git clone からのてんかいほうほう
+
 var time;
+var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
 
 function setUp(){
   var spreadsheet = SpreadsheetApp.create("mask");
@@ -29,14 +33,13 @@ function setUp(){
   for(var row = 1; row <= range.getNumRows(); row++) {
     for(var collumn = 1; collumn <= range.getNumColumns(); collumn++) {
       range.getCell(row, collumn).setValue(output[row-1][collumn-1]);
-      Logger.log(1);
     }
   }
 }
 
 function main() {
-  var activeSheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var inputCellsRange = activeSheet.getRange(2, 4, 1, 2);
+  mainSheet.getRange('B10').setValue('');
+  var inputCellsRange = mainSheet.getRange(2, 4, 1, 2);
   for(var row = 1; row <= inputCellsRange.getNumRows(); row++) {
     var url = inputCellsRange.getCell(row, 1).getValue();
     var now = new Date();
@@ -45,10 +48,12 @@ function main() {
     var charset = inputCellsRange.getCell(row, 2).getValue();
     var response = request(url, charset);
     if (response.code === 200) {
-      var parsedHtml = parseTableHtml(response.body, '<table style="font-size:12px;" border="1" class="hyoMenu" width="870">')
+      var parsedHtml = parseTableHtml(response.body, '<table style="font-size:12px;" border="1" class="hyoMenu" width="870">');
+      var parsedTime = parsedHtml[0] + parsedHtml[1] + parsedHtml[2] + parsedHtml[3];
       // スクレイピングしたエリアに記載されている日時と、リクエストパラメータの日時が等しいことを確認する
-      if (time !== parsedHtml[0] + parsedHtml[1] + parsedHtml[2] + parsedHtml[3]) {
-        handleError();
+      if (time !== parsedTime) {
+        handleError('最新の情報が取得できませんでした。サイトの更新が止まっているか、サイトのhtml構成が変化している可能性があります。',
+                    'サイトから取得できた最新の日時： ' + parsedTime);
       }
       var so2 = parsedHtml[4];
       var no = parsedHtml[5];
@@ -85,15 +90,8 @@ function main() {
           TEMP  気温        ℃ 　   大気の温度。
           HUM   相対湿度     % 　    空気中の水蒸気量が飽和状態（含みうる水蒸気量が限界になった時）に比べ、どの程度含まれているかを％で表したもの。
       */
-      // TODO: 閾値の決定
-      // TODO: git管理
-      // TODO: git clone からのてんかいほうほう
-      // TODO: スプレッドシートの土台を生成する function
-      
-      
-
     } else {
-      handleError();
+      handleError('クローリングが正常に行われませんでした。', response.code + " : " + response.body);
     }
   }
 }
@@ -106,7 +104,8 @@ function main() {
 function request(url, charset) {
   var option = {
     'method' : 'get',
-    'contentType' : 'text/html; charset='+ charset
+    'contentType' : 'text/html; charset='+ charset,
+    'muteHttpExceptions' : true
   };
  
   /** @see https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app */
@@ -125,6 +124,7 @@ function request(url, charset) {
  */
 function parseTableHtml(html, root) {
   var index = html.indexOf(root);
+  var result = [];
   if (index !== -1) {
     html = html.substring(index);
     var startIndex = html.indexOf('<tr');
@@ -132,7 +132,6 @@ function parseTableHtml(html, root) {
     // 1つ目のtrタグが、最新の時刻の情報なのでそこだけ見る
     html = html.substring(startIndex,endIndex + '</tr>'.length);
     
-    var result = [];
     while(true) {
       startIndex = html.indexOf('<td');
       endIndex = html.indexOf('</td>');
@@ -145,4 +144,13 @@ function parseTableHtml(html, root) {
     }
   }
   return result;
+}
+
+/**
+ * 例外発生時の処理
+ * 特定のセルにエラーメッセージを出力
+ * TODO: いずれはslackにメッセージを投げたい。スプレッドシートに出力しても誰も気が付かない
+ */
+function handleError(title, body){
+  mainSheet.getRange('B10').setValue(title + String.fromCharCode(10) + body);
 }
