@@ -408,3 +408,27 @@ function notifyToSlack(text) {
 function handleError(title, body){
   notifyToSlack(title + String.fromCharCode(10) + body);
 }
+
+/**
+ * トリガーを自動生成する
+ * 標準のトリガーを利用して隔日で実行すると、6-7時の様に1時間の間のどこかで実行すると実行時刻が安定しないので、手動で特定の時刻に実行するようなトリガーを生成する
+ * 毎日 8:00, 12:00, 18:00 の3回分
+ * @return void
+ */
+function resetTrigger(){
+  // 登録済みトリガーを削除する
+  var triggers = ScriptApp.getProjectTriggers()
+  if (Array.isArray(triggers)) {
+    triggers.forEach(function(trigger) {
+      ScriptApp.deleteTrigger(trigger);
+    });
+  }
+
+  var date = new Date();
+  var hours = [8, 12, 18];
+  hours.forEach(function(hour) {
+    date.setHours(hour);
+    date.setMinutes(0);
+    ScriptApp.newTrigger('main').timeBased().at(date).create();
+  })
+}
