@@ -1,4 +1,4 @@
-// TODO: 閾値の決定
+// TODO: 大気汚染物質について閾値の決定
 // TODO: git clone からのてんかいほうほう
 // TODO: 花粉について5月末で終了。北海道については6月末で終了。開始は2がつ1日
       /*
@@ -11,6 +11,25 @@
 
 var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
 var slackIncomingUrl = mainSheet.getRange("B1").getValue();
+// はなこさんで使用している計測器の製作元HPに花粉量の目安の記載があった http://www.yamatronics.com/graph.html
+var pollenThreshold = 50;
+// そらまめくんに 大気汚染物質の環境基準値載っていた http://soramame.taiki.go.jp/index/setsumei/koumoku.html
+// あとは環境省 https://www.env.go.jp/kijun/taiki.html https://www.env.go.jp/council/former2013/07air/y078-01/mat03-1.pdf
+var so2Threshold = 0.101;
+var noThreshold = 0.201;
+var no2Threshold = 0.061;
+var noxThreshold = 10000  //TODO: ちゃんとした値に置き換える
+var coThreshold = 10;
+var oxThreshold = 0.061;
+var nmhcThreshold = 0.32;
+var ch4Threshold = 10000;  //TODO: ちゃんとした値に置き換える
+var thcThreshold = 10000;  //TODO: ちゃんとした値に置き換える
+var spmThreshold = 0.201;
+var pm2_5Threshold = 36;
+var spThreshold = 10000;   //TODO: ちゃんとした値に置き換える
+
+var colorCodeNoMask = '#58FA82';
+var colorCodeNeedMask = '#F79F81';
 
 // 継承の書き方がよくわかんなかったのでそれっぽい感じでの実装
 Crawler = function () {
@@ -75,49 +94,90 @@ SoramameCrawler = function (mstCode) {
 
   /**
    * @param {array} html
-   * @return string
+   * @return object
    */
   SoramameCrawler._formatOutout = function (html) {
     // 各物質の説明はこちらを参照 http://soramame.taiki.go.jp/KomokuDetail.html
     var obj = {
-      'year' : html[0],
-      'month' : html[1],
-      'day' : html[2],
-      'hour' : html[3],
-      'so2' : html[4],
-      'no' : html[5],
-      'no2' : html[6],
-      'nox' : html[7],
-      'co' : html[8],
-      'ox' : html[9],
-      'nmhc' : html[10],
-      'ch4' : html[11],
-      'thc' : html[12],
-      'spm' : html[13],
-      'pm2_5' : html[14],
-      'sp' : html[15],
-      'wd' : html[16],
-      'ws' : html[17],
-      'temperature' : html[18],
-      'hum' : html[19]
+      year : html[0],
+      month : html[1],
+      day : html[2],
+      hour : html[3],
+      so2 : html[4],
+      no : html[5],
+      no2 : html[6],
+      nox : html[7],
+      co : html[8],
+      ox : html[9],
+      nmhc : html[10],
+      ch4 : html[11],
+      thc : html[12],
+      spm : html[13],
+      pm2_5 : html[14],
+      sp : html[15],
+      wd : html[16],
+      ws : html[17],
+      temperature : html[18],
+      hum : html[19]
     };
-    return obj.year + "年" + obj.month + "月" + obj.day + "日" + obj.hour + "時の情報です。" + String.fromCharCode(10)
-      + "  SO2:二酸化硫黄 " + obj.so2 + "(ppm)" + String.fromCharCode(10)
-      + "  NO:一酸化窒素 " + obj.no + "(ppm)" + String.fromCharCode(10)
-      + "  NO2:二酸化窒素 " + obj.no2 + "(ppm)" + String.fromCharCode(10)
-      + "  NOX:窒素酸化物 " + obj.nox + "(ppm)" + String.fromCharCode(10)
-      + "  CO:一酸化炭素 " + obj.co + "(ppm)" + String.fromCharCode(10)
-      + "  OX:光化学オキシダント " + obj.ox + "(ppm)" + String.fromCharCode(10)
-      + "  NMHC:非メタン炭化水素 " + obj.nmhc + "(ppmC)" + String.fromCharCode(10)
-      + "  CH4:メタン " + obj.ch4 + "(ppmC)" + String.fromCharCode(10)
-      + "  THC:全炭化水素 " + obj.thc + "(ppmC)" + String.fromCharCode(10)
-      + "  SPM:浮遊粒子状物質 " + obj.spm + "(mg/m3)" + String.fromCharCode(10)
-      + "  PM2.5:微小粒子状物質 " + obj.pm2_5 + "(μg/m3)" + String.fromCharCode(10)
-      + "  SP:浮遊粉じん " + obj.sp + "(mg/m3)" + String.fromCharCode(10)
-      + "  WD:風向 " + obj.wd + "(16方位)" + String.fromCharCode(10)
-      + "  WS:風速 " + obj.ws + "(m/s)" + String.fromCharCode(10)
-      + "  TEMP:気温 " + obj.temperature + "(℃)" + String.fromCharCode(10)
-      + "  HUM:相対湿度 " + obj.hum + "(%)";
+
+    var need_mask = (obj.so2 > so2Threshold
+                     || obj.no > noThreshold
+                     || obj.no2 > no2Threshold
+                     || obj.nox > noxThreshold
+                     || obj.co > coThreshold
+                     || obj.ox > oxThreshold
+                     || obj.nmhc > nmhcThreshold
+                     || obj.ch4 > ch4Threshold
+                     || obj.thc > thcThreshold
+                     || obj.spm > spmThreshold
+                     || obj.pm2_5 > pm2_5Threshold
+                     || obj.sp  > spThreshold) ? true: false;
+    var color = need_mask ? colorCodeNeedMask : colorCodeNoMask;
+
+    Logger.log(obj.so2 > so2Threshold)
+Logger.log(obj.no > noThreshold)
+Logger.log(obj.no2 > no2Threshold)
+Logger.log(obj.nox > noxThreshold)
+Logger.log(obj.co > coThreshold)
+Logger.log(obj.ox > oxThreshold)
+Logger.log(obj.nmhc > nmhcThreshold)
+Logger.log(obj.ch4 > ch4Threshold)
+Logger.log(obj.thc > thcThreshold)
+Logger.log(obj.spm > spmThreshold)
+Logger.log(obj.pm2_5 > pm2_5Threshold)
+Logger.log(obj.sp  > spThreshold)
+
+
+    return {
+      attachments : [
+        {
+          pretext : obj.year + '年' + obj.month + '月' + obj.day + '日' + obj.hour + '時の大気汚染物質の情報です',
+          color : color,
+          fields : [
+            {
+              title : need_mask ? 'マスクを付けて外出してください。' : '',
+              value : '  SO2:二酸化硫黄 ' + obj.so2 + '(ppm)' + String.fromCharCode(10)
+                + '  NO:一酸化窒素 ' + obj.no + '(ppm)' + String.fromCharCode(10)
+                + '  NO2:二酸化窒素 ' + obj.no2 + '(ppm)' + String.fromCharCode(10)
+                + '  NOX:窒素酸化物 ' + obj.nox + '(ppm)' + String.fromCharCode(10)
+                + '  CO:一酸化炭素 ' + obj.co + '(ppm)' + String.fromCharCode(10)
+                + '  OX:光化学オキシダント ' + obj.ox + '(ppm)' + String.fromCharCode(10)
+                + '  NMHC:非メタン炭化水素 ' + obj.nmhc + '(ppmC)' + String.fromCharCode(10)
+                + '  CH4:メタン ' + obj.ch4 + '(ppmC)' + String.fromCharCode(10)
+                + '  THC:全炭化水素 ' + obj.thc + '(ppmC)' + String.fromCharCode(10)
+                + '  SPM:浮遊粒子状物質 ' + obj.spm + '(mg/m3)' + String.fromCharCode(10)
+                + '  PM2.5:微小粒子状物質 ' + obj.pm2_5 + '(μg/m3)' + String.fromCharCode(10)
+                + '  SP:浮遊粉じん ' + obj.sp + '(mg/m3)' + String.fromCharCode(10)
+                + '  WD:風向 ' + obj.wd + '(16方位)' + String.fromCharCode(10)
+                + '  WS:風速 ' + obj.ws + '(m/s)' + String.fromCharCode(10)
+                + '  TEMP:気温 ' + obj.temperature + '(℃)' + String.fromCharCode(10)
+                + '  HUM:相対湿度 ' + obj.hum + '(%)'
+            }
+          ]
+        }
+      ]
+    }
   }
 
   /**
@@ -142,7 +202,7 @@ SoramameCrawler = function (mstCode) {
 
   /**
    * @param {array} body
-   * @return void
+   * @return object
    */
   SoramameCrawler.output = function (body) {
     var parsedHtml = this._parseHtml(body);
@@ -232,25 +292,40 @@ HanakoCrawler = function (mstCode) {
   /**
    * @param {string} date
    * @param {string} html
-   * @return string
+   * @return object
    */
   HanakoCrawler._formatOutout = function (date, html) {
     var obj = {
-      'hour' : html[0],
-      'pollen' : html[1],
-      'wd' : html[2],
-      'ws' : html[3],
-      'temperature' : html[4],
-      'precipitation' : html[5],
-      'radar' : html[6],
+      hour : html[0],
+      pollen : html[1],
+      wd : html[2],
+      ws : html[3],
+      temperature : html[4],
+      precipitation : html[5],
+      radar : html[6],
     };
-    return date + obj.hour + "の情報です。" + String.fromCharCode(10)
-      + "  花粉量 " + obj.pollen + "(個/m3)" + String.fromCharCode(10)
-      + "  風向 " + obj.wd + "(16方位)" + String.fromCharCode(10)
-      + "  風速 " + obj.ws + "(m/s)" + String.fromCharCode(10)
-      + "  気温 " + obj.temperature + "(℃)" + String.fromCharCode(10)
-      + "  降水量 " + obj.temperature + "(mm)" + String.fromCharCode(10)
-      + "  レーダー降雨・降雪の有無 " + obj.radar;
+    var need_mask = obj.pollen > pollenThreshold;
+    var color = need_mask ? colorCodeNeedMask : colorCodeNoMask;
+    return {
+      attachments : [
+        {
+          pretext : date + obj.hour + 'の花粉情報です',
+          color : color,
+          fields :[
+            {
+              title : need_mask ? 'マスクを付けて外出してください。' : '',
+          value : (need_mask ? '<!here> ' + String.fromCharCode(10): '')
+                + '  花粉量 ' + obj.pollen + '(個/m3)' + String.fromCharCode(10)
+                + '  風向 ' + obj.wd + '(16方位)' + String.fromCharCode(10)
+                + '  風速 ' + obj.ws + '(m/s)' + String.fromCharCode(10)
+                + '  気温 ' + obj.temperature + '(℃)' + String.fromCharCode(10)
+                + '  降水量 ' + obj.temperature + '(mm)' + String.fromCharCode(10)
+                + '  レーダー降雨・降雪の有無 ' + obj.radar
+            }
+          ]
+        }
+      ]
+    }
   }
 
   /**
@@ -303,7 +378,7 @@ HanakoCrawler = function (mstCode) {
 
   /**
    * @param {object} body
-   * @return void
+   * @return object
    */
   HanakoCrawler.output = function (body) {
     var date = this._parseHeaderHtml(body.header);
@@ -380,14 +455,10 @@ function main() {
 }
 
 /**
- * @param {string} text
- * @return void
+ * @param {object} sendData
+ * @return object
  */
-function notifyToSlack(text) {
-  return;
-  var sendData = {
-    text : text
-  };
+function notifyToSlack(sendData) {
   var payload = JSON.stringify(sendData);
   options = {
     method : 'post',
@@ -420,9 +491,13 @@ function resetTrigger(){
   var triggers = ScriptApp.getProjectTriggers()
   if (Array.isArray(triggers)) {
     triggers.forEach(function(trigger) {
-      ScriptApp.deleteTrigger(trigger);
-    });
+      // mainのトリガーのみを削除する
+      if(trigger.getHandlerFunction() === 'main') {
+        ScriptApp.deleteTrigger(trigger);
+      }
+    })
   }
+
 
   var date = new Date();
   var hours = [8, 12, 18];
