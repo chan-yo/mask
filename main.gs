@@ -1,18 +1,12 @@
-// TODO: 大気汚染物質について閾値の決定
 // TODO: git clone からのてんかいほうほう
-// TODO: 花粉について5月末で終了。北海道については6月末で終了。開始は2がつ1日
-      /*
-      北海道
-      50110100
-      50110200
-      50120100
-      50120200
-      */
 
 var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-var slackIncomingUrl = mainSheet.getRange("B1").getValue();
+var slackIncomingUrl = mainSheet.getRange('B1').getValue();
+var mstCodeSoramame = mainSheet.getRange('B2').getValue();
+var mstCodeHanako = mainSheet.getRange('B3').getValue();
 // はなこさんで使用している計測器の製作元HPに花粉量の目安の記載があった http://www.yamatronics.com/graph.html
-var pollenThreshold = 50;
+var pollenThreshold = mainSheet.getRange('B4').getValue();
+
 // そらまめくんに 大気汚染物質の環境基準値載っていた http://soramame.taiki.go.jp/index/setsumei/koumoku.html
 // あとは環境省 https://www.env.go.jp/kijun/taiki.html https://www.env.go.jp/council/former2013/07air/y078-01/mat03-1.pdf
 var so2Threshold = 0.101;
@@ -134,20 +128,6 @@ SoramameCrawler = function (mstCode) {
                      || obj.pm2_5 > pm2_5Threshold
                      || obj.sp  > spThreshold) ? true: false;
     var color = need_mask ? colorCodeNeedMask : colorCodeNoMask;
-
-    Logger.log(obj.so2 > so2Threshold)
-Logger.log(obj.no > noThreshold)
-Logger.log(obj.no2 > no2Threshold)
-Logger.log(obj.nox > noxThreshold)
-Logger.log(obj.co > coThreshold)
-Logger.log(obj.ox > oxThreshold)
-Logger.log(obj.nmhc > nmhcThreshold)
-Logger.log(obj.ch4 > ch4Threshold)
-Logger.log(obj.thc > thcThreshold)
-Logger.log(obj.spm > spmThreshold)
-Logger.log(obj.pm2_5 > pm2_5Threshold)
-Logger.log(obj.sp  > spThreshold)
-
 
     return {
       attachments : [
@@ -314,7 +294,7 @@ HanakoCrawler = function (mstCode) {
           fields :[
             {
               title : need_mask ? 'マスクを付けて外出してください。' : '',
-          value : (need_mask ? '<!here> ' + String.fromCharCode(10): '')
+              value : (need_mask ? '<!here> ' + String.fromCharCode(10): '')
                 + '  花粉量 ' + obj.pollen + '(個/m3)' + String.fromCharCode(10)
                 + '  風向 ' + obj.wd + '(16方位)' + String.fromCharCode(10)
                 + '  風速 ' + obj.ws + '(m/s)' + String.fromCharCode(10)
@@ -332,6 +312,31 @@ HanakoCrawler = function (mstCode) {
    * @return object
    */
   HanakoCrawler.request = function () {
+    var now = new Date();
+    // 2/1 - 5/31 の期間のみ花粉情報が提供される
+    var infoProvisionStartAt = new Date(now.getFullYear(), 1, 1);
+    var infoProvisionEndAt;
+    // 北海道のみ 6/30 まで提供される
+    var hokkaidoAreas = [
+      '50110100',
+      '50110200',
+      '50120100',
+      '50120200'
+    ];
+    if (hokkaidoAreas.indexOf(mstCode) !== -1) {
+      infoProvisionEndAt = new Date(now.getFullYear(), 5, 30);
+    } else {
+      infoProvisionEndAt = new Date(now.getFullYear(), 4, 31);
+    }
+    // 情報提供期間外であれば何もしない
+    if (!(infoProvisionStartAt<= now && now <= infoProvisionEndAt)) {
+      return {
+        'code' : 503,
+        'body' : '花粉情報は ' + (infoProvisionStartAt.getMonth()+1) + '/' + infoProvisionStartAt.getDate()
+          + ' ～ ' + (infoProvisionEndAt.getMonth()+1) + '/' + infoProvisionEndAt.getDate() + ' の期間内のみ表示されます。'
+      };
+    }
+
     var charset = 'UTF-8';
     var mainUrl   = 'http://kafun.taiki.go.jp/Hyou0.aspx?MstCode=:mstCode&AreaCode=01';
     mainUrl = mainUrl.replace(':mstCode', mstCode);
@@ -399,23 +404,19 @@ function setUp(){
   var output = [
     [
       'Slack Incoming URL',
-      '',
       ''
     ],[
-      '対象',
-      'サイトURL',
-      '観測値ID'
-    ],[
-      'PM2.5',
-      'http://soramame.taiki.go.jp/',
+      '大気汚染物質についての観測地ID',
       ''
     ],[
-      '花粉',
-      'http://kafun.taiki.go.jp/',
+      '花粉についての観測地ID',
       ''
+    ],[
+      '花粉の閾値',
+      '50'
     ]
   ];
-  var range = sheet.getRange(1, 1, 4, 3);
+  var range = sheet.getRange(1, 1, 4, 2);
   for(var row = 1; row <= range.getNumRows(); row++) {
     for(var collumn = 1; collumn <= range.getNumColumns(); collumn++) {
       range.getCell(row, collumn).setValue(output[row-1][collumn-1]);
@@ -428,23 +429,14 @@ function setUp(){
  */
 function main() {
   try {
-    var inputCellsRange = mainSheet.getRange(3, 3, 2, 2);
-    for(var row = 1; row <= inputCellsRange.getNumRows(); row++) {
-      var mstCode = inputCellsRange.getCell(row, 1).getValue();
-      var crawler = (function (row, mstCode) {
-        switch (row) {
-          case 1:
-            return new SoramameCrawler(mstCode);
-            break;
-          case 2:
-            return new HanakoCrawler(mstCode);
-            break;
-        }
-      })(row, mstCode);
-
-      var response = crawler.request();
+    var crawlers = [
+      new SoramameCrawler(mstCodeSoramame),
+      new HanakoCrawler(mstCodeHanako)
+    ]
+    for (var i = 0; i < crawlers.length; i++) {
+      var response = crawlers[i].request();
       if (response.code === 200) {
-        notifyToSlack(crawler.output(response.body));
+        notifyToSlack(crawlers[i].output(response.body));
       } else {
         handleError('クローリングが正常に行われませんでした。', response.code + " : " + response.body);
       }
@@ -477,7 +469,19 @@ function notifyToSlack(sendData) {
  * @return void
  */
 function handleError(title, body){
-  notifyToSlack(title + String.fromCharCode(10) + body);
+  var sednData = {
+    attachments : [
+        {
+          fields :[
+            {
+              title : title,
+              value : body
+            }
+          ]
+        }
+      ]
+  };
+  return notifyToSlack(sednData);
 }
 
 /**
@@ -498,7 +502,6 @@ function resetTrigger(){
     })
   }
 
-
   var date = new Date();
   var hours = [8, 12, 18];
   hours.forEach(function(hour) {
@@ -507,3 +510,4 @@ function resetTrigger(){
     ScriptApp.newTrigger('main').timeBased().at(date).create();
   })
 }
+
