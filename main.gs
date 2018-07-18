@@ -4,7 +4,6 @@ var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
 var slackIncomingUrl = mainSheet.getRange('B1').getValue();
 var mstCodeSoramame = mainSheet.getRange('B2').getValue();
 var mstCodeHanako = mainSheet.getRange('B3').getValue();
-// はなこさんで使用している計測器の製作元HPに花粉量の目安の記載があった http://www.yamatronics.com/graph.html
 var pollenThreshold = mainSheet.getRange('B4').getValue();
 
 // そらまめくんに 大気汚染物質の環境基準値載っていた http://soramame.taiki.go.jp/index/setsumei/koumoku.html
@@ -413,7 +412,7 @@ function setUp(){
       ''
     ],[
       '花粉の閾値',
-      '50'
+      '50'  // はなこさんで使用している計測器の製作元HPに花粉量の目安の記載があった http://www.yamatronics.com/graph.html
     ]
   ];
   var range = sheet.getRange(1, 1, 4, 2);
@@ -447,6 +446,7 @@ function main() {
 }
 
 /**
+ * 引数で指定した内容で slack へ通知を投げる
  * @param {object} sendData
  * @return object
  */
@@ -491,11 +491,10 @@ function handleError(title, body){
  * @return void
  */
 function resetTrigger(){
-  // 登録済みトリガーを削除する
+  // 登録済みトリガーのうち function main のみを削除する
   var triggers = ScriptApp.getProjectTriggers()
   if (Array.isArray(triggers)) {
     triggers.forEach(function(trigger) {
-      // mainのトリガーのみを削除する
       if(trigger.getHandlerFunction() === 'main') {
         ScriptApp.deleteTrigger(trigger);
       }
