@@ -1,4 +1,5 @@
 // TODO: git clone からのてんかいほうほう
+// TODO: githubのバージョンアップ通知
 
 var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
 var slackIncomingUrl = mainSheet.getRange('B1').getValue();
@@ -11,15 +12,15 @@ var pollenThreshold = mainSheet.getRange('B4').getValue();
 var so2Threshold = 0.101;
 var noThreshold = 0.201;
 var no2Threshold = 0.061;
-var noxThreshold = 10000  //TODO: ちゃんとした値に置き換える
+var noxThreshold = 0.06  // 二酸化窒素などを含んだ総称。調べても基準値が見当たらなかったので、二酸化窒素(No2)と同じ値にしておく
 var coThreshold = 10;
 var oxThreshold = 0.061;
 var nmhcThreshold = 0.32;
-var ch4Threshold = 10000;  //TODO: ちゃんとした値に置き換える
-var thcThreshold = 10000;  //TODO: ちゃんとした値に置き換える
+var ch4Threshold = 10000;  // TODO: 非メタン炭化水素(NMHC) とメタン(CH4)の両者の合計が全炭化水素(THC)である。 メタン単体の環境基準値は見当たらなかった。
+var thcThreshold = 10000;  // TODO: 非メタン炭化水素(NMHC) とメタン(CH4)の両者の合計が全炭化水素(THC)である。 全炭化水素単体の環境基準値は見当たらなかった。
 var spmThreshold = 0.201;
 var pm2_5Threshold = 36;
-var spThreshold = 10000;   //TODO: ちゃんとした値に置き換える
+var spThreshold = 10000;   //TODO: 環境基準値は見当たらなかった。
 
 var colorCodeNoMask = '#58FA82';
 var colorCodeNeedMask = '#F79F81';
