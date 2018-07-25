@@ -6,6 +6,7 @@ var slackIncomingUrl = mainSheet.getRange('B1').getValue();
 var mstCodeSoramame = mainSheet.getRange('B2').getValue();
 var mstCodeHanako = mainSheet.getRange('B3').getValue();
 var pollenThreshold = mainSheet.getRange('B4').getValue();
+var currentVersion = '1.0.0';
 
 // そらまめくんに 大気汚染物質の環境基準値載っていた http://soramame.taiki.go.jp/index/setsumei/koumoku.html
 // あとは環境省 https://www.env.go.jp/kijun/taiki.html https://www.env.go.jp/council/former2013/07air/y078-01/mat03-1.pdf
@@ -422,6 +423,11 @@ function setUp(){
       range.getCell(row, collumn).setValue(output[row-1][collumn-1]);
     }
   }
+
+  // 最新バージョンが公開されていないかチェックする trigger の登録
+  createRunsEverydayTrigger('notifyLatestVersionIfNeeded', 9);
+  // 1日おきに、時刻指定の trigger を再登録する trigger の登録
+  createRunsEverydayTrigger('resetTrigger', 0);
 }
 
 /**
@@ -486,6 +492,39 @@ function handleError(title, body){
 }
 
 /**
+ * 現在動いているプログラムより、新しいバージョンが公開されているか判定する
+ * @return bool
+ */
+function isNotLatestVersion(){
+  var response = UrlFetchApp.fetch('https://raw.githubusercontent.com/chan-yo/mask/master/VERSION');
+  var latestVersion = response.getContentText().replace(/\r?\n/g,"");
+  return latestVersion !== currentVersion;
+}
+
+
+/**
+ * 最新のソースコードが公開されていることを通知する
+ * @return void
+ */
+function notifyLatestVersionIfNeeded(){
+  var sednData = {
+    attachments : [
+        {
+          fields :[
+            {
+              title : '最新のソースコードが公開されています',
+              value : '<!here> https://github.com/chan-yo/mask をご確認ください'
+            }
+          ]
+        }
+      ]
+  };
+  if (isNotLatestVersion()) {
+    notifyToSlack(sednData);
+  }
+}
+
+/**
  * トリガーを自動生成する
  * 標準のトリガーを利用して隔日で実行すると、6-7時の様に1時間の間のどこかで実行すると実行時刻が安定しないので、手動で特定の時刻に実行するようなトリガーを生成する
  * 毎日 8:00, 12:00, 18:00 の3回分
@@ -502,12 +541,35 @@ function resetTrigger(){
     })
   }
 
-  var date = new Date();
   var hours = [8, 12, 18];
   hours.forEach(function(hour) {
-    date.setHours(hour);
-    date.setMinutes(0);
-    ScriptApp.newTrigger('main').timeBased().at(date).create();
+    createDateTimeBasedTrigger('main', hour, 0);
   })
 }
 
+/**
+ * 特定の時刻に基づいた時間主導型トリガーを作成する
+ * @param {string} functionName
+ * @param {number} hour
+ * @param {number} minute
+ * @return void
+ */
+function createDateTimeBasedTrigger(functionName, hour, minute){
+  var date = new Date();
+  date.setHours(hour);
+  date.setMinutes(minute);
+  ScriptApp.newTrigger(functionName).timeBased().at(date).create();
+}
+
+/**
+ * 特定の時刻に基づいた日タイマー式の時間主導型トリガーを作成する
+ * @param {string} functionName
+ * @param {number} hour
+ * @return void
+ */
+function createRunsEverydayTrigger(functionName, hour){
+  var date = new Date();
+  date.setHours(hour);
+  date.setMinutes(minute);
+  ScriptApp.newTrigger(functionName).timeBased().atHour(hour).everyDays(1).create();
+}
