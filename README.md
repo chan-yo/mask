@@ -61,10 +61,17 @@ http://kafun.taiki.go.jp/
 
 # 使い方
 毎日 8, 12, 18 時に自動的に「mask」チャンネルに大気汚染物質、花粉の情報が投稿される。  
-任意の大気汚染物質について環境基準値を超える。もしくは花粉量が閾値を超えた場合のみ`@here`**<font color="#EE4545">有り</font>**で「mask」チャンネルに投稿される。  
-上記条件を満たさない場合は`@here`**<font color="#5358EE">無し</font>**で「mask」チャンネルに投稿される。  
+任意の大気汚染物質について環境基準値を超える。もしくは花粉量が閾値を超えた場合のみ`@here` **<font color="#EE4545">有り</font>** で「mask」チャンネルに投稿される。  
+上記条件を満たさない場合は`@here` **<font color="#5358EE">無し</font>** で「mask」チャンネルに投稿される。  
 
-## `@hereあり`
-キャプチャ
-## `@hereなし`
-キャプチャ
+## マスク着用を促す`@here` **<font color="#EE4545">有り</font>** の通知  
+![大気汚染物質、花粉量が基準値を超えた場合](https://github.com/chan-yo/mask/raw/master/image/notice.png "大気汚染物質、花粉量が基準値を超えた場合")
+
+## マスクが必要ない`@here` **<font color="#EE4545">無し</font>** の通知  
+![大気汚染物質、花粉量が基準値を超えていない場合](https://github.com/chan-yo/mask/raw/master/image/no_notice.png "大気汚染物質、花粉量が基準値を超えていない場合")
+
+## 花粉情報の収集期間外の通知  
+![花粉情報の収集期間外](https://github.com/chan-yo/mask/raw/master/image/period_not_notice_about_pollen.png "花粉情報の収集期間外")
+
+## 最新のソースコードが公開されている際の通知
+![花粉情報の収集期間外](https://github.com/chan-yo/mask/raw/master/image/latest_version.png "花粉情報の収集期間外")
