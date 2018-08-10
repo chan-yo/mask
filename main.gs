@@ -5,6 +5,7 @@ if (SpreadsheetApp.getActiveSpreadsheet() != null) {
   var mstCodeSoramame = mainSheet.getRange('B2').getValue();
   var mstCodeHanako = mainSheet.getRange('B3').getValue();
   var pollenThreshold = mainSheet.getRange('B4').getValue();
+  var currentVersion = '1.0.0';
 }
 
 // そらまめくんに 大気汚染物質の環境基準値載っていた http://soramame.taiki.go.jp/index/setsumei/koumoku.html
@@ -137,7 +138,8 @@ SoramameCrawler = function (mstCode) {
           fields : [
             {
               title : need_mask ? 'マスクを付けて外出してください。' : '',
-              value : '  SO2:二酸化硫黄 ' + obj.so2 + '(ppm)' + String.fromCharCode(10)
+              value : (need_mask ? '<!here> ' + String.fromCharCode(10): '')
+                + '  SO2:二酸化硫黄 ' + obj.so2 + '(ppm)' + String.fromCharCode(10)
                 + '  NO:一酸化窒素 ' + obj.no + '(ppm)' + String.fromCharCode(10)
                 + '  NO2:二酸化窒素 ' + obj.no2 + '(ppm)' + String.fromCharCode(10)
                 + '  NOX:窒素酸化物 ' + obj.nox + '(ppm)' + String.fromCharCode(10)
@@ -422,6 +424,10 @@ function setUp(){
       range.getCell(row, collumn).setValue(output[row-1][collumn-1]);
     }
   }
+  // 最新バージョンが公開されていないかチェックする trigger の登録
+  createRunsEverydayTrigger('notifyLatestVersionIfNeeded', 9);
+  // 1日おきに、時刻指定の trigger を再登録する trigger の登録
+  createRunsEverydayTrigger('resetTrigger', 0);
 }
 
 /**
@@ -484,6 +490,41 @@ function handleError(title, body){
   };
   return notifyToSlack(sednData);
 }
+
+/**
+ * 現在動いているプログラムより、新しいバージョンが公開されているか判定する
+ * @return bool
+ */
+function isNotLatestVersion(){
+  var response = UrlFetchApp.fetch('https://raw.githubusercontent.com/chan-yo/mask/master/VERSION');
+  var latestVersion = response.getContentText().replace(/\r?\n/g,"");
+  return latestVersion !== currentVersion;
+}
+
+
+/**
+ * 最新のソースコードが公開されていることを通知する
+ * @return void
+ */
+function notifyLatestVersionIfNeeded(){
+  var sednData = {
+    attachments : [
+        {
+          fields :[
+            {
+              title : '最新のソースコードが公開されています',
+              value : '<!here> https://github.com/chan-yo/mask をご確認ください'
+            }
+          ]
+        }
+      ]
+  };
+  if (isNotLatestVersion()) {
+    notifyToSlack(sednData);
+  }
+}
+
+
 
 /**
  * トリガーを自動生成する
