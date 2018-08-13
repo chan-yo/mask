@@ -1,12 +1,9 @@
-// TODO: git clone からのてんかいほうほう
-if (SpreadsheetApp.getActiveSpreadsheet() != null) {
-  var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var slackIncomingUrl = mainSheet.getRange('B1').getValue();
-  var mstCodeSoramame = mainSheet.getRange('B2').getValue();
-  var mstCodeHanako = mainSheet.getRange('B3').getValue();
-  var pollenThreshold = mainSheet.getRange('B4').getValue();
-  var currentVersion = '1.0.0';
-}
+var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+var slackIncomingUrl = mainSheet.getRange('B1').getValue();
+var mstCodeSoramame = mainSheet.getRange('B2').getValue();
+var mstCodeHanako = mainSheet.getRange('B3').getValue();
+var pollenThreshold = mainSheet.getRange('B4').getValue();
+var currentVersion = '1.0.0';
 
 // そらまめくんに 大気汚染物質の環境基準値載っていた http://soramame.taiki.go.jp/index/setsumei/koumoku.html
 // あとは環境省 https://www.env.go.jp/kijun/taiki.html https://www.env.go.jp/council/former2013/07air/y078-01/mat03-1.pdf
@@ -401,8 +398,6 @@ HanakoCrawler = function (mstCode) {
  * @return void
  */
 function setUp(){
-  var spreadsheet = SpreadsheetApp.create("mask");
-  var sheet = spreadsheet.getActiveSheet()
   var output = [
     [
       'Slack Incoming URL',
@@ -418,16 +413,17 @@ function setUp(){
       '50'  // はなこさんで使用している計測器の製作元HPに花粉量の目安の記載があった http://www.yamatronics.com/graph.html
     ]
   ];
-  var range = sheet.getRange(1, 1, 4, 2);
+  var range = mainSheet.getRange(1, 1, 4, 2);
   for(var row = 1; row <= range.getNumRows(); row++) {
     for(var collumn = 1; collumn <= range.getNumColumns(); collumn++) {
       range.getCell(row, collumn).setValue(output[row-1][collumn-1]);
     }
   }
+  _deleteAllTriger();
   // 最新バージョンが公開されていないかチェックする trigger の登録
-  createRunsEverydayTrigger('notifyLatestVersionIfNeeded', 9);
+  _createRunsEverydayTrigger('notifyLatestVersionIfNeeded', 9);
   // 1日おきに、時刻指定の trigger を再登録する trigger の登録
-  createRunsEverydayTrigger('resetTrigger', 0);
+  _createRunsEverydayTrigger('resetTrigger', 0);
 }
 
 /**
@@ -442,65 +438,15 @@ function main() {
     for (var i = 0; i < crawlers.length; i++) {
       var response = crawlers[i].request();
       if (response.code === 200) {
-        notifyToSlack(crawlers[i].output(response.body));
+        _notifyToSlack(crawlers[i].output(response.body));
       } else {
-        handleError('クローリングが正常に行われませんでした。', response.code + " : " + response.body);
+        _handleError('クローリングが正常に行われませんでした。', response.code + " : " + response.body);
       }
     }
   } catch (e) {
-    handleError('エラーが発生しました。', e.name + " : " + e.message);
+    _handleError('エラーが発生しました。', e.name + " : " + e.message);
   }
 }
-
-/**
- * 引数で指定した内容で slack へ通知を投げる
- * @param {object} sendData
- * @return object
- */
-function notifyToSlack(sendData) {
-  var payload = JSON.stringify(sendData);
-  options = {
-    method : 'post',
-    contentType : 'application/json',
-    payload: payload,
-    muteHttpExceptions : true,
-  };
-  /** @see https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app */
-  return UrlFetchApp.fetch(slackIncomingUrl, options);
-}
-
-/**
- * 例外発生時の処理
- * @param {string} title
- * @param {string} body
- * @return void
- */
-function handleError(title, body){
-  var sednData = {
-    attachments : [
-        {
-          fields :[
-            {
-              title : title,
-              value : body
-            }
-          ]
-        }
-      ]
-  };
-  return notifyToSlack(sednData);
-}
-
-/**
- * 現在動いているプログラムより、新しいバージョンが公開されているか判定する
- * @return bool
- */
-function isNotLatestVersion(){
-  var response = UrlFetchApp.fetch('https://raw.githubusercontent.com/chan-yo/mask/master/VERSION');
-  var latestVersion = response.getContentText().replace(/\r?\n/g,"");
-  return latestVersion !== currentVersion;
-}
-
 
 /**
  * 最新のソースコードが公開されていることを通知する
@@ -519,12 +465,10 @@ function notifyLatestVersionIfNeeded(){
         }
       ]
   };
-  if (isNotLatestVersion()) {
-    notifyToSlack(sednData);
+  if (_isNotLatestVersion()) {
+    _notifyToSlack(sednData);
   }
 }
-
-
 
 /**
  * トリガーを自動生成する
@@ -534,14 +478,7 @@ function notifyLatestVersionIfNeeded(){
  */
 function resetTrigger(){
   // 登録済みトリガーのうち function main のみを削除する
-  var triggers = ScriptApp.getProjectTriggers()
-  if (Array.isArray(triggers)) {
-    triggers.forEach(function(trigger) {
-      if(trigger.getHandlerFunction() === 'main') {
-        ScriptApp.deleteTrigger(trigger);
-      }
-    })
-  }
+  _deleteAllTriger('main');
 
   var date = new Date();
   var hours = [8, 12, 18];
@@ -552,3 +489,79 @@ function resetTrigger(){
   })
 }
 
+/**
+ * 例外発生時の処理
+ * @param {string} title
+ * @param {string} body
+ * @return void
+ */
+function _handleError(title, body){
+  var sednData = {
+    attachments : [
+        {
+          fields :[
+            {
+              title : title,
+              value : body
+            }
+          ]
+        }
+      ]
+  };
+  return _notifyToSlack(sednData);
+}
+
+/**
+ * 現在動いているプログラムより、新しいバージョンが公開されているか判定する
+ * @return bool
+ */
+function _isNotLatestVersion(){
+  var response = UrlFetchApp.fetch('https://raw.githubusercontent.com/chan-yo/mask/master/VERSION');
+  var latestVersion = response.getContentText().replace(/\r?\n/g,"");
+  return latestVersion !== currentVersion;
+}
+
+/**
+ * 引数で指定した内容で slack へ通知を投げる
+ * @param {object} sendData
+ * @return object
+ */
+function _notifyToSlack(sendData) {
+  var payload = JSON.stringify(sendData);
+  options = {
+    method : 'post',
+    contentType : 'application/json',
+    payload: payload,
+    muteHttpExceptions : true,
+  };
+  /** @see https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app */
+  return UrlFetchApp.fetch(slackIncomingUrl, options);
+}
+
+/**
+ * 登録済みトリガーをすべて削除する
+ * @param {string} name
+ * @return void
+ */
+function _deleteAllTriger(name){
+  var triggers = ScriptApp.getProjectTriggers()
+  if (Array.isArray(triggers)) {
+    triggers.forEach(function(trigger) {
+      if (!name) {
+        ScriptApp.deleteTrigger(trigger);
+      } else if (name && trigger.getHandlerFunction() === name) {
+        ScriptApp.deleteTrigger(trigger);
+      }
+    })
+  }
+}
+
+/**
+ * 特定の時刻に基づいた日タイマー式の時間主導型トリガーを作成する
+ * @param {string} functionName
+ * @param {number} hour
+ * @return void
+ */
+function _createRunsEverydayTrigger(functionName, hour){
+  ScriptApp.newTrigger(functionName).timeBased().atHour(hour).everyDays(1).create();
+}

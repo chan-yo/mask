@@ -18,31 +18,36 @@
 ### Slack Incoming の設定
 
 1. https://{slack_name}.slack.com/admin へアクセス  
-2. 左メニューの Configure apps -> 左メニューの Custom Integrations  -> Incoming WebHooks -> 左メニューの Add New Integration の順にクリックする。  
+2. 左メニューの Configure apps -> 左メニューの Custom Integrations  -> Incoming WebHooks -> 左メニューの Add Configuration の順にクリックする。  
 3. Post to Channel に 先ほど作成した「mask」チャンネルを指定する。  
-4. Add integration をクリックする。  
+4. Add Incoming WebHooks integration をクリックする。  
 5. 遷移したページの Webhook URL の下に書かれている URL をメモしておく。  
 6. 下部にある Customize Name に 「mask」 と入力する。  
-こちらは Slack にメッセージを投稿する際の bot ユーザ名なので自由につけても良い。  
+Customize Name, Customize Icon は Slack にメッセージを投稿する際の bot ユーザ名などなので自由につけても良い。  
 7. Save Settings をクリックする。  
 
 ### 通知設定
-大気汚染物質などが多い場合のみ通知されるようにする。  
+マスク着用の必要が有る場合のみ通知されるようにする。  
 「mask」チャンネル -> Notification preference -> Desktop, Mobile ともに Just mentions を選択  
 ※Ignore notifications for @channel and @here にはチェックを入れないこと
+![Notification preference](https://github.com/chan-yo/mask/raw/master/image/slack_notification_preference1.png "Notification preference")
+![Notification preference](https://github.com/chan-yo/mask/raw/master/image/slack_notification_preference2.png "Notification preference")
+
+
 
 ## Spreadsheet の設定  
 ### 初期化  
-1. [GoogleDrive](https://drive.google.com/drive/u/0/my-drive) へアクセスする。  
-2. 新規 -> その他 -> GoogleAppsScript をクリックする。  
-3. プロジェクト名を「無題のプロジェクト」から「mask」に変更する。  
-4. 左側サイドメニュー -> コード.gs -> 三角アイコン -> 名前を変更 をクリックする。  
-5. 「main」に書き換えて OK をクリックする。  
-6. [main.gs](https://raw.githubusercontent.com/chan-yo/mask/master/main.gs) の内容をコピーして、先程操作していた GoogleAppsScript に貼り付け・保存する。  
+1. [GoogleDrive](https://drive.google.com/drive/u/0/my-drive) へアクセスする。
+2. 新規 -> Google スプレッドシート をクリックする。  
+3. スプレッドシート名を「無題のスプレッドシート」から「mask」に変更する。  
+4. ツール -> スクリプトエディタをクリックする。  
+5. プロジェクト名を「無題のプロジェクト」から「mask」に変更する。  
+6. 左側サイドメニュー -> コード.gs -> 三角アイコン -> 名前を変更 をクリックする。  
+7. 「main」に書き換えて OK をクリックする。  
+8. [main.gs](https://raw.githubusercontent.com/chan-yo/mask/master/main.gs) の内容をコピーして、先程操作していた main.gs に貼り付け・保存する。  
 7. ファイル -> プロジェクトのプロパティ -> タイムゾーン を東京に変更する。  
 8. 関数を選択 -> 「setUp」を選択し、▷をクリックする。  
 承認を求められた場合は、「許可を確認」をクリックし画面の指示に従う。  
-9. 「setUp」の実行が完了すると、[GoogleDrive](https://drive.google.com/drive/u/0/my-drive) に「mask」という Spreadsheet が作られる。  
 
 ### 観測地設定  
 
@@ -62,9 +67,9 @@ http://kafun.taiki.go.jp/
 1. http://kafun.taiki.go.jp/Library.html#6 へアクセスする。
 2. 自分が住んでいる地域に「所在地」が近い「都道府県」「設置場所」をメモする。
 3. http://kafun.taiki.go.jp/ ヘアクセスして、「花粉の情報を見る」内の、先程メモした都道府県が含まれる地域をクリックする。
-4. 「測定局選択」から先程メモした「設置場所」を選択する。
-5. 「表」をクリックする。
-6. 表示されたページのURL内の MstCode=xxxxxx の xxxxxx 部分が観測地 ID。
+4. 「全局の最新情報を見る」内の「測定局選択」から先程メモした「設置場所」を選択する。
+5. 「全局の最新情報を見る」内の「表」をクリックする。
+6. 表示されたページの URL 内の MstCode=xxxxxx の xxxxxx 部分が観測地 ID。
 
 ### Incoming WebHooks の設定
 
