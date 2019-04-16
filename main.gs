@@ -2,8 +2,8 @@ var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
 var slackIncomingUrl = mainSheet.getRange('B1').getValue();
 var mstCodeSoramame = mainSheet.getRange('B2').getValue();
 var mstCodeHanako = mainSheet.getRange('B3').getValue();
-var pollenThreshold = mainSheet.getRange('B4').getValue();
-var currentVersion = '1.0.0';
+var pollenThreshold = parseInt(mainSheet.getRange('B4').getValue());
+var currentVersion = '1.0.1';
 
 // そらまめくんに 大気汚染物質の環境基準値載っていた http://soramame.taiki.go.jp/index/setsumei/koumoku.html
 // あとは環境省 https://www.env.go.jp/kijun/taiki.html https://www.env.go.jp/council/former2013/07air/y078-01/mat03-1.pdf
@@ -95,18 +95,18 @@ SoramameCrawler = function (mstCode) {
       month : html[1],
       day : html[2],
       hour : html[3],
-      so2 : html[4],
-      no : html[5],
-      no2 : html[6],
-      nox : html[7],
-      co : html[8],
-      ox : html[9],
-      nmhc : html[10],
-      ch4 : html[11],
-      thc : html[12],
-      spm : html[13],
-      pm2_5 : html[14],
-      sp : html[15],
+      so2 : parseInt(html[4]),
+      no : parseInt(html[5]),
+      no2 : parseInt(html[6]),
+      nox : parseInt(html[7]),
+      co : parseInt(html[8]),
+      ox : parseInt(html[9]),
+      nmhc : parseInt(html[10]),
+      ch4 : parseInt(html[11]),
+      thc : parseInt(html[12]),
+      spm : parseInt(html[13]),
+      pm2_5 : parseInt(html[14]),
+      sp : parseInt(html[15]),
       wd : html[16],
       ws : html[17],
       temperature : html[18],
@@ -276,7 +276,7 @@ HanakoCrawler = function (mstCode) {
   HanakoCrawler._formatOutout = function (date, html) {
     var obj = {
       hour : html[0],
-      pollen : html[1],
+      pollen : parseInt(html[1]),
       wd : html[2],
       ws : html[3],
       temperature : html[4],
@@ -459,7 +459,7 @@ function notifyLatestVersionIfNeeded(){
           fields :[
             {
               title : '最新のソースコードが公開されています',
-              value : '<!here> https://github.com/chan-yo/mask をご確認ください'
+              value : '<!here> https://github.com/madayo/mask をご確認ください'
             }
           ]
         }
@@ -516,7 +516,7 @@ function _handleError(title, body){
  * @return bool
  */
 function _isNotLatestVersion(){
-  var response = UrlFetchApp.fetch('https://raw.githubusercontent.com/chan-yo/mask/master/VERSION');
+  var response = UrlFetchApp.fetch('https://raw.githubusercontent.com/madayo/mask/master/VERSION');
   var latestVersion = response.getContentText().replace(/\r?\n/g,"");
   return latestVersion !== currentVersion;
 }

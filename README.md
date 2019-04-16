@@ -30,8 +30,8 @@ Customize Name, Customize Icon は Slack にメッセージを投稿する際の
 マスク着用の必要が有る場合のみ通知されるようにする。  
 「mask」チャンネル -> Notification preference -> Desktop, Mobile ともに Just mentions を選択  
 ※Ignore notifications for @channel and @here にはチェックを入れないこと
-![Notification preference](https://github.com/chan-yo/mask/raw/master/image/slack_notification_preference1.png "Notification preference")
-![Notification preference](https://github.com/chan-yo/mask/raw/master/image/slack_notification_preference2.png "Notification preference")
+![Notification preference](https://github.com/madayo/mask/raw/master/image/slack_notification_preference1.png "Notification preference")
+![Notification preference](https://github.com/madayo/mask/raw/master/image/slack_notification_preference2.png "Notification preference")
 
 
 
@@ -44,7 +44,7 @@ Customize Name, Customize Icon は Slack にメッセージを投稿する際の
 5. プロジェクト名を「無題のプロジェクト」から「mask」に変更する。  
 6. 左側サイドメニュー -> コード.gs -> 三角アイコン -> 名前を変更 をクリックする。  
 7. 「main」に書き換えて OK をクリックする。  
-8. [main.gs](https://raw.githubusercontent.com/chan-yo/mask/master/main.gs) の内容をコピーして、先程操作していた main.gs に貼り付け・保存する。  
+8. [main.gs](https://raw.githubusercontent.com/madayo/mask/master/main.gs) の内容をコピーして、先程操作していた main.gs に貼り付け・保存する。  
 7. ファイル -> プロジェクトのプロパティ -> タイムゾーン を東京に変更する。  
 8. 関数を選択 -> 「setUp」を選択し、▷をクリックする。  
 承認を求められた場合は、「許可を確認」をクリックし画面の指示に従う。  
@@ -81,16 +81,16 @@ http://kafun.taiki.go.jp/
 上記条件を満たさない場合は`@here` **<font color="#5358EE">無し</font>** で「mask」チャンネルに投稿される。  
 
 ## マスク着用を促す`@here` **<font color="#EE4545">有り</font>** の通知  
-![大気汚染物質、花粉量が基準値を超えた場合](https://github.com/chan-yo/mask/raw/master/image/notice.png "大気汚染物質、花粉量が基準値を超えた場合")
+![大気汚染物質、花粉量が基準値を超えた場合](https://github.com/madayo/mask/raw/master/image/notice.png "大気汚染物質、花粉量が基準値を超えた場合")
 
 ## マスクが必要ない`@here` **<font color="#EE4545">無し</font>** の通知  
-![大気汚染物質、花粉量が基準値を超えていない場合](https://github.com/chan-yo/mask/raw/master/image/no_notice.png "大気汚染物質、花粉量が基準値を超えていない場合")
+![大気汚染物質、花粉量が基準値を超えていない場合](https://github.com/madayo/mask/raw/master/image/no_notice.png "大気汚染物質、花粉量が基準値を超えていない場合")
 
 ## 花粉情報の収集期間外の通知  
-![花粉情報の収集期間外](https://github.com/chan-yo/mask/raw/master/image/period_not_notice_about_pollen.png "花粉情報の収集期間外")
+![花粉情報の収集期間外](https://github.com/madayo/mask/raw/master/image/period_not_notice_about_pollen.png "花粉情報の収集期間外")
 
 ## 最新のソースコードが公開されている際の通知
-![花粉情報の収集期間外](https://github.com/chan-yo/mask/raw/master/image/latest_version.png "花粉情報の収集期間外")
+![花粉情報の収集期間外](https://github.com/madayo/mask/raw/master/image/latest_version.png "花粉情報の収集期間外")
 
 # 残タスクとか
 
